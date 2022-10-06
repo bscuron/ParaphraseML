@@ -4,10 +4,12 @@ from nltk import download, word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 import string
+from Levenshtein import distance as levenshtein_distance
 
 DATA_TRAIN_PATH='../data/train_with_label.txt'
 DATA_DEV_PATH='../data/dev_with_label.txt'
 DATA_TEST_PATH='../data/test_without_label.txt'
+FEATURE_COLUMNS = ['LEVENSHTEIN_DIST']
 
 def main():
     data_train, data_dev, data_test = get_data()
@@ -33,7 +35,14 @@ def clean(df):
 
 # TODO
 def extract_features(df):
+    df['LEVENSHTEIN_DIST'] = get_levenshtein_distance(df)
     return df
+
+def get_levenshtein_distance(df):
+    distances = []
+    for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
+        distances.append(levenshtein_distance(s1, s2))
+    return distances
 
 if __name__ == '__main__':
     # Disable SSL check
