@@ -11,18 +11,22 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.model_selection import GridSearchCV
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import Normalizer
+from sklearn.preprocessing import StandardScaler
 
 DATA_TRAIN_PATH='../data/train_with_label.txt'
 DATA_DEV_PATH='../data/dev_with_label.txt'
 DATA_TEST_PATH='../data/test_without_label.txt'
-FEATURE_COLUMNS = ['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'LENGTH_DIFFERENCES']
+FEATURE_COLUMNS = ['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'LENGTH_DIFFERENCES', 'SHARED_WORDS']
 
 def main():
     print('Reading, cleaning, analyzing data...')
     data_train, data_dev, data_test = get_data()
-    # print(data_train[['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'GROUND_TRUTH']])
-    # print(data_dev[['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'GROUND_TRUTH']])
-    # print(data_test[['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'GROUND_TRUTH']])
+    data_train.to_csv('./train.csv')
+    print(data_train[['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'SHARED_WORDS', 'GROUND_TRUTH']])
+    print(data_dev[['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'SHARED_WORDS', 'GROUND_TRUTH']])
+    print(data_test[['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'SHARED_WORDS']])
 
     # print("Finding optimal hyperparameters...")
     # param_grid = {'C': [0.01, 0.1, 1, 10, 100, 1000, 2000], 'kernel': ['rbf', 'sigmoid']}
@@ -30,8 +34,7 @@ def main():
     # clf = clf.fit(data_train[FEATURE_COLUMNS], data_train['GROUND_TRUTH'])
     # print(clf.best_estimator_)
 
-
-    clf = SVC(C=10000, class_weight='balanced')
+    clf = make_pipeline(StandardScaler(), SVC(C=10000, class_weight='balanced'))
     clf.fit(data_train[FEATURE_COLUMNS], data_train['GROUND_TRUTH'])
     y_dev_pred = clf.predict(data_dev[FEATURE_COLUMNS])
     print(accuracy_score(data_dev['GROUND_TRUTH'], y_dev_pred))
@@ -57,7 +60,24 @@ def extract_features(df):
     df['LEVENSHTEIN_DIST'] = get_levenshtein_distance(df)
     df['LENGTH_DIFFERENCES'] = get_length_difference(df)
     df['COSINE_SIMILARITY'] = get_cosine_similarity(df)
+    df['SHARED_WORDS'] = get_shared_words(df)
     return df
+
+def get_shared_words(df):
+    shared_words_list = []
+    for s1, s2, in zip(df['SENTENCE_1'], df['SENTENCE_2']):
+        d1 = {}
+        for w in s1.split():
+            d1[w] = 1 if w not in d1 else d1[w] + 1
+        d2 = {}
+        for w in s2.split():
+            d2[w] = 1 if w not in d2 else d2[w] + 1
+        shared_words = set(d1) & set(d2)
+        d = {}
+        for w in shared_words:
+            d[w] = min(d1[w], d2[w])
+        shared_words_list.append(sum(d.values()))
+    return shared_words_list
 
 def get_cosine_similarity(df):
     vectorizer = TfidfVectorizer()
