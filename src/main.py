@@ -8,17 +8,33 @@ import string
 from Levenshtein import distance as levenshtein_distance
 from sklearn.metrics.pairwise import cosine_similarity
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.model_selection import GridSearchCV
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score
 
 DATA_TRAIN_PATH='../data/train_with_label.txt'
 DATA_DEV_PATH='../data/dev_with_label.txt'
 DATA_TEST_PATH='../data/test_without_label.txt'
-FEATURE_COLUMNS = ['LEVENSHTEIN_DIST']
+FEATURE_COLUMNS = ['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'LENGTH_DIFFERENCES']
 
 def main():
+    print('Reading, cleaning, analyzing data...')
     data_train, data_dev, data_test = get_data()
-    print(data_train[['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'GROUND_TRUTH']])
-    print(data_dev[['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'GROUND_TRUTH']])
-    print(data_test[['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'GROUND_TRUTH']])
+    # print(data_train[['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'GROUND_TRUTH']])
+    # print(data_dev[['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'GROUND_TRUTH']])
+    # print(data_test[['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'GROUND_TRUTH']])
+
+    # print("Finding optimal hyperparameters...")
+    # param_grid = {'C': [0.01, 0.1, 1, 10, 100, 1000, 2000], 'kernel': ['rbf', 'sigmoid']}
+    # clf = GridSearchCV(SVC(class_weight='balanced'), param_grid)
+    # clf = clf.fit(data_train[FEATURE_COLUMNS], data_train['GROUND_TRUTH'])
+    # print(clf.best_estimator_)
+
+
+    clf = SVC(C=10000, class_weight='balanced')
+    clf.fit(data_train[FEATURE_COLUMNS], data_train['GROUND_TRUTH'])
+    y_dev_pred = clf.predict(data_dev[FEATURE_COLUMNS])
+    print(accuracy_score(data_dev['GROUND_TRUTH'], y_dev_pred))
 
 # Read and clean the train set, dev set, and test set. Return each in a tuple in the order (train, dev, test)
 def get_data():
