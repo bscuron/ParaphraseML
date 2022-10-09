@@ -35,7 +35,7 @@ def main():
     # clf = clf.fit(data_train[FEATURE_COLUMNS], data_train['GROUND_TRUTH'])
     # print(clf.best_estimator_)
 
-    clf = make_pipeline(StandardScaler(), SVC(C=10000, class_weight='balanced'))
+    clf = make_pipeline(StandardScaler(), SVC(C=10000, class_weight='balanced', kernel='linear'))
     clf.fit(data_train[FEATURE_COLUMNS], data_train['GROUND_TRUTH'])
     y_dev_pred = clf.predict(data_dev[FEATURE_COLUMNS])
     print(accuracy_score(data_dev['GROUND_TRUTH'], y_dev_pred))
