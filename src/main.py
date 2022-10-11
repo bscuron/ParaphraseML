@@ -74,7 +74,17 @@ def extract_features(df):
     # df['TOKEN_SORT_RATIO'] = get_token_sort_ratios(df)
     # df['TOKEN_SET_RATIO'] = get_token_set_ratios(df)
     # df['RATCLIFF_OBERSHELP'] = get_ratcliff_obershelp(df)
+    # df['JACCARD_SIMILARITY'] = get_jaccard_similarity(df)
     return df
+
+def get_jaccard_similarity(df):
+    similarities = []
+    for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
+        w1l, w2l = s1.split(), s2.split()
+        intersection = set(w1l).intersection(set(w2l))
+        union = set(w1l).union(set(w2l))
+        similarities.append(float(len(intersection)) / len(union))
+    return similarities
 
 def get_ratcliff_obershelp(df):
     ratios = []
