@@ -15,6 +15,7 @@ from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import Normalizer
 from sklearn.preprocessing import StandardScaler
 from thefuzz.fuzz import ratio, partial_ratio, token_sort_ratio, token_set_ratio
+from difflib import SequenceMatcher
 
 DATA_TRAIN_PATH='../data/train_with_label.txt'
 DATA_DEV_PATH='../data/dev_with_label.txt'
@@ -72,7 +73,14 @@ def extract_features(df):
     # df['PARTIAL_RATIO'] = get_partial_ratios(df)
     # df['TOKEN_SORT_RATIO'] = get_token_sort_ratios(df)
     # df['TOKEN_SET_RATIO'] = get_token_set_ratios(df)
+    # df['RATCLIFF_OBERSHELP'] = get_ratcliff_obershelp(df)
     return df
+
+def get_ratcliff_obershelp(df):
+    ratios = []
+    for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
+        ratios.append(SequenceMatcher(None, s1, s2).ratio())
+    return ratios
 
 def get_ratios(df):
     ratios = []
