@@ -24,28 +24,38 @@ TMP_DIR = '../tmp'
 FEATURE_COLUMNS = ['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'LENGTH_DIFFERENCE', 'SHARED_WORDS']
 
 def main():
-    print('Reading, cleaning, analyzing data...')
+    print('Reading, cleaning, extracting features...')
     data_train, data_dev, data_test = get_data()
 
     # dump dataframes
+    print(f'Dumping dataframes to `{TMP_DIR}`...')
     data_train.to_csv(f'{TMP_DIR}/data_train_processed.csv')
     data_dev.to_csv(f'{TMP_DIR}/data_dev_processed.csv')
     data_test.to_csv(f'{TMP_DIR}/data_test_processed.csv')
 
+    print('Printing extracted features...')
     print(data_train[FEATURE_COLUMNS + ['GROUND_TRUTH']])
     print(data_dev[FEATURE_COLUMNS + ['GROUND_TRUTH']])
     print(data_test[FEATURE_COLUMNS])
 
-    # print("Finding optimal hyperparameters...")
-    # param_grid = {'C': [0.01, 0.1, 1, 10, 100, 1000, 2000], 'kernel': ['rbf', 'sigmoid']}
-    # clf = GridSearchCV(SVC(class_weight='balanced'), param_grid)
-    # clf = clf.fit(data_train[FEATURE_COLUMNS], data_train['GROUND_TRUTH'])
-    # print(clf.best_estimator_)
-
+    # Create model and fit to training data
+    print('Creating SVM model...')
     clf = make_pipeline(StandardScaler(), SVC(C=10000, class_weight='balanced', kernel='linear'))
+    print('Fitting model to training data...')
     clf.fit(data_train[FEATURE_COLUMNS], data_train['GROUND_TRUTH'])
+
+    # Compute accuracy on dev
+    print('Making predictions on DEV set...')
     y_dev_pred = clf.predict(data_dev[FEATURE_COLUMNS])
-    print(accuracy_score(data_dev['GROUND_TRUTH'], y_dev_pred))
+    print('Computing DEV accuracy...')
+    print('DEV ACCURACY:', accuracy_score(data_dev['GROUND_TRUTH'], y_dev_pred))
+
+    # Make predictions on test data
+    print('Making predictions on TEST set...')
+    y_test_pred = clf.predict(data_test[FEATURE_COLUMNS])
+    data_test['PREDICTION'] = y_test_pred
+    print(data_test)
+    data_test.to_csv('./test_with_prediction_label.csv')
 
 # Read and clean the train set, dev set, and test set. Return each in a tuple in the order (train, dev, test)
 def get_data():
