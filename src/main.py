@@ -58,7 +58,8 @@ def get_data():
 # Cleans the text data in columns 'SENTENCE_1' and 'SENTENCE_2'
 def clean(df):
     lemmatizer = WordNetLemmatizer()
-    ILLEGAL = set(stopwords.words('english') + list(string.punctuation))
+    # ILLEGAL = set(stopwords.words('english') + list(string.punctuation))
+    ILLEGAL = set(list(string.punctuation))
     df['SENTENCE_1'] = df['SENTENCE_1'].apply(lambda x: ' '.join([lemmatizer.lemmatize(token.lower().strip(string.punctuation)) for token in word_tokenize(x) if token not in ILLEGAL and len(token.strip(string.punctuation)) > 1]))
     df['SENTENCE_2'] = df['SENTENCE_2'].apply(lambda x: ' '.join([lemmatizer.lemmatize(token.lower().strip(string.punctuation)) for token in word_tokenize(x) if token not in ILLEGAL and len(token.strip(string.punctuation)) > 1]))
     return df
