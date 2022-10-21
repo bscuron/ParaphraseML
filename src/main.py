@@ -17,11 +17,11 @@ from sklearn.preprocessing import StandardScaler
 from thefuzz.fuzz import ratio, partial_ratio, token_sort_ratio, token_set_ratio
 from difflib import SequenceMatcher
 
-DATA_TRAIN_PATH='../data/train_with_label.txt'
-DATA_DEV_PATH='../data/dev_with_label.txt'
-DATA_TEST_PATH='../data/test_without_label.txt'
-TMP_DIR = '../tmp'
-FEATURE_COLUMNS = ['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'LENGTH_DIFFERENCE', 'SHARED_WORDS']
+DATA_TRAIN_PATH='../data/train_with_label.txt'                                                   # training set
+DATA_DEV_PATH='../data/dev_with_label.txt'                                                       # dev set
+DATA_TEST_PATH='../data/test_without_label.txt'                                                  # test set
+TMP_DIR = '../tmp'                                                                               # temporary directory to store processed dataframes
+FEATURE_COLUMNS = ['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'LENGTH_DIFFERENCE', 'SHARED_WORDS'] # features used in the SVC/SVM model
 
 def main():
     print('Reading, cleaning, extracting features...')
@@ -88,6 +88,7 @@ def extract_features(df):
     # df['JACCARD_SIMILARITY'] = get_jaccard_similarity(df)
     return df
 
+# Calculates the jaccard similarities of columns 'SENTENCE_1' and 'SENTENCE_2'
 def get_jaccard_similarity(df):
     similarities = []
     for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
@@ -97,36 +98,42 @@ def get_jaccard_similarity(df):
         similarities.append(float(len(intersection)) / len(union))
     return similarities
 
+# Calculates the ratcliff obershelp ratios of columns 'SENTENCE_1' and 'SENTENCE_2'
 def get_ratcliff_obershelp(df):
     ratios = []
     for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
         ratios.append(SequenceMatcher(None, s1, s2).ratio())
     return ratios
 
+# Calculates the similarity ratios of columns 'SENTENCE_1' and 'SENTENCE_2'
 def get_ratios(df):
     ratios = []
     for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
         ratios.append(ratio(s1, s2))
     return ratios
 
+# Calculates the similarity partial ratios of columns 'SENTENCE_1' and 'SENTENCE_2'
 def get_partial_ratios(df):
     ratios = []
     for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
         ratios.append(partial_ratio(s1, s2))
     return ratios
 
+# Calculates the token sort similarity ratios of columns 'SENTENCE_1' and 'SENTENCE_2'
 def get_token_sort_ratios(df):
     ratios = []
     for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
         ratios.append(token_sort_ratio(s1, s2))
     return ratios
 
+# Calculates the token set similarity ratios of columns 'SENTENCE_1' and 'SENTENCE_2'
 def get_token_set_ratios(df):
     ratios = []
     for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
         ratios.append(token_set_ratio(s1, s2))
     return ratios
 
+# Calculates the number of shared words of columns 'SENTENCE_1' and 'SENTENCE_2'
 def get_shared_words(df):
     shared_words_list = []
     for s1, s2, in zip(df['SENTENCE_1'], df['SENTENCE_2']):
@@ -143,6 +150,7 @@ def get_shared_words(df):
         shared_words_list.append(sum(d.values()))
     return shared_words_list
 
+# Calculates the cosine similarity of columns 'SENTENCE_1' and 'SENTENCE_2'
 def get_cosine_similarity(df):
     vectorizer = TfidfVectorizer()
     corpus = []
@@ -157,6 +165,7 @@ def get_cosine_similarity(df):
         cosine_simililarity_vector.append(cosine_similarity(vec1.reshape(1, -1), vec2.reshape(1, -1))[0][0])
     return cosine_simililarity_vector
 
+# Calculates the length difference of columns 'SENTENCE_1' and 'SENTENCE_2'
 def get_length_difference(df):
     differences = []
     for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
@@ -164,6 +173,7 @@ def get_length_difference(df):
     return differences
 
 
+# Calculates the levenshtein distance of columns 'SENTENCE_1' and 'SENTENCE_2'
 def get_levenshtein_distance(df):
     distances = []
     for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
