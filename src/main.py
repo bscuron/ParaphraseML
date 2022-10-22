@@ -21,6 +21,7 @@ DATA_TRAIN_PATH='../data/train_with_label.txt'                                  
 DATA_DEV_PATH='../data/dev_with_label.txt'                                                       # dev set
 DATA_TEST_PATH='../data/test_without_label.txt'                                                  # test set
 TMP_DIR = '../tmp'                                                                               # temporary directory to store processed dataframes
+RESULT_DIR = '..'                                                                                # directory to store calculated results
 FEATURE_COLUMNS = ['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'LENGTH_DIFFERENCE', 'SHARED_WORDS'] # features used in the SVC/SVM model
 
 def main():
@@ -50,12 +51,14 @@ def main():
     print('Computing DEV accuracy...')
     print('DEV ACCURACY:', accuracy_score(data_dev['GROUND_TRUTH'], y_dev_pred))
 
-    # Make predictions on test data
+    # Make predictions on test data and output the test data
     print('Making predictions on TEST set...')
+    y_test_labels = data_test['ID']
     y_test_pred = clf.predict(data_test[FEATURE_COLUMNS])
-    data_test['PREDICTION'] = y_test_pred
-    print(data_test)
-    data_test.to_csv('./test_with_prediction_label.csv')
+    with open(f'{RESULT_DIR}BenjaminScuron_test_result.txt', 'w') as f:
+        for id, label in zip(y_test_labels, y_test_pred):
+            print(f'{id}\t{label}', file=f)
+
 
 # Read and clean the train set, dev set, and test set. Return each in a tuple in the order (train, dev, test)
 def get_data():
