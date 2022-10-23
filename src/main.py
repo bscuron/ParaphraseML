@@ -21,7 +21,7 @@ DATA_TRAIN_PATH='../data/train_with_label.txt'                                  
 DATA_DEV_PATH='../data/dev_with_label.txt'                                                       # dev set
 DATA_TEST_PATH='../data/test_without_label.txt'                                                  # test set
 TMP_DIR = '../tmp'                                                                               # temporary directory to store processed dataframes
-RESULT_DIR = '..'                                                                                # directory to store calculated results
+TEST_PRED_FILE = '../BenjaminScuron_test_result.txt'                                             # text file that stores the predicted values of the test set
 FEATURE_COLUMNS = ['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'LENGTH_DIFFERENCE', 'SHARED_WORDS'] # features used in the SVC/SVM model
 
 def main():
@@ -55,7 +55,7 @@ def main():
     print('Making predictions on TEST set...')
     y_test_labels = data_test['ID']
     y_test_pred = clf.predict(data_test[FEATURE_COLUMNS])
-    with open(f'{RESULT_DIR}BenjaminScuron_test_result.txt', 'w') as f:
+    with open(f'{TEST_PRED_FILE}', 'w') as f:
         for id, label in zip(y_test_labels, y_test_pred):
             print(f'{id}\t{label}', file=f)
 
