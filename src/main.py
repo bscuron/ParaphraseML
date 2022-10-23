@@ -55,6 +55,7 @@ def main():
     print('Making predictions on TEST set...')
     y_test_labels = data_test['ID']
     y_test_pred = clf.predict(data_test[FEATURE_COLUMNS])
+    print(f'Writing predictions to `{TEST_PRED_FILE}`')
     with open(f'{TEST_PRED_FILE}', 'w') as f:
         for id, label in zip(y_test_labels, y_test_pred):
             print(f'{id}\t{label}', file=f)
