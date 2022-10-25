@@ -4,6 +4,7 @@ import ssl
 from nltk import download, word_tokenize, pos_tag
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
+from nltk.translate import nist_score, bleu_score
 import string
 from Levenshtein import distance as levenshtein_distance
 from sklearn.metrics.pairwise import cosine_similarity
@@ -17,12 +18,12 @@ from sklearn.preprocessing import StandardScaler
 from thefuzz.fuzz import ratio, partial_ratio, token_sort_ratio, token_set_ratio
 from difflib import SequenceMatcher
 
-DATA_TRAIN_PATH='../data/train_with_label.txt'                                                                 # training set
-DATA_DEV_PATH='../data/dev_with_label.txt'                                                                     # dev set
-DATA_TEST_PATH='../data/test_without_label.txt'                                                                # test set
-TMP_DIR = '../tmp'                                                                                             # temporary directory to store processed dataframes
-TEST_PRED_FILE = '../BenjaminScuron_test_result.txt'                                                           # text file that stores the predicted values of the test set
-FEATURE_COLUMNS = ['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'LENGTH_DIFFERENCE', 'SHARED_WORDS', 'SHARED_POS'] # features used in the SVC/SVM model
+DATA_TRAIN_PATH='../data/train_with_label.txt'                                                                                             # training set
+DATA_DEV_PATH='../data/dev_with_label.txt'                                                                                                 # dev set
+DATA_TEST_PATH='../data/test_without_label.txt'                                                                                            # test set
+TMP_DIR = '../tmp'                                                                                                                         # temporary directory to store processed dataframes
+TEST_PRED_FILE = '../BenjaminScuron_test_result.txt'                                                                                       # text file that stores the predicted values of the test set
+FEATURE_COLUMNS = ['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'LENGTH_DIFFERENCE', 'SHARED_WORDS', 'SHARED_POS', 'NIST_SCORE', 'BLEU_SCORE'] # features used in the SVC/SVM model
 
 def main():
     print('Reading, cleaning, extracting features...')
@@ -91,7 +92,23 @@ def extract_features(df):
     # df['RATCLIFF_OBERSHELP'] = get_ratcliff_obershelp(df)
     # df['JACCARD_SIMILARITY'] = get_jaccard_similarity(df)
     df['SHARED_POS'] = get_shared_pos(df)
+    df['NIST_SCORE'] = get_nist_score(df)
+    df['BLEU_SCORE'] = get_bleu_score(df)
     return df
+
+# Calculates the nist score for each sentence. The average of the two scores are taken (s1 as reference, s2 as hypothesis & s2 as reference, s1 as hypothesis)
+def get_nist_score(df):
+    scores = []
+    for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
+        scores.append((nist_score.sentence_nist([s1], s2) + nist_score.sentence_nist([s2], s1)) / 2)
+    return scores
+
+# Calculates the bleu score for each sentence. The average of the two scores are taken (s1 as reference, s2 as hypothesis & s2 as reference, s1 as hypothesis)
+def get_bleu_score(df):
+    scores = []
+    for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
+        scores.append((bleu_score.sentence_bleu([s1], s2) + bleu_score.sentence_bleu([s2], s1)) / 2)
+    return scores
 
 # Returns the number of shared pos tags between 'SENTENCE_1' and 'SENTENCE_2'
 def get_shared_pos(df):
@@ -113,8 +130,8 @@ def get_shared_pos(df):
         for key in common_keys:
             s.append(min(d1[key], d2[key]))
         shared.append(sum(s))
-        
-    return shared            
+
+    return shared
 
 # Calculates the jaccard similarities of columns 'SENTENCE_1' and 'SENTENCE_2'
 def get_jaccard_similarity(df):
