@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import ssl
-from nltk import download, word_tokenize
+from nltk import download, word_tokenize, pos_tag
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
 import string
@@ -17,12 +17,12 @@ from sklearn.preprocessing import StandardScaler
 from thefuzz.fuzz import ratio, partial_ratio, token_sort_ratio, token_set_ratio
 from difflib import SequenceMatcher
 
-DATA_TRAIN_PATH='../data/train_with_label.txt'                                                   # training set
-DATA_DEV_PATH='../data/dev_with_label.txt'                                                       # dev set
-DATA_TEST_PATH='../data/test_without_label.txt'                                                  # test set
-TMP_DIR = '../tmp'                                                                               # temporary directory to store processed dataframes
-TEST_PRED_FILE = '../BenjaminScuron_test_result.txt'                                             # text file that stores the predicted values of the test set
-FEATURE_COLUMNS = ['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'LENGTH_DIFFERENCE', 'SHARED_WORDS'] # features used in the SVC/SVM model
+DATA_TRAIN_PATH='../data/train_with_label.txt'                                                                 # training set
+DATA_DEV_PATH='../data/dev_with_label.txt'                                                                     # dev set
+DATA_TEST_PATH='../data/test_without_label.txt'                                                                # test set
+TMP_DIR = '../tmp'                                                                                             # temporary directory to store processed dataframes
+TEST_PRED_FILE = '../BenjaminScuron_test_result.txt'                                                           # text file that stores the predicted values of the test set
+FEATURE_COLUMNS = ['LEVENSHTEIN_DIST', 'COSINE_SIMILARITY', 'LENGTH_DIFFERENCE', 'SHARED_WORDS', 'SHARED_POS'] # features used in the SVC/SVM model
 
 def main():
     print('Reading, cleaning, extracting features...')
@@ -90,7 +90,31 @@ def extract_features(df):
     # df['TOKEN_SET_RATIO'] = get_token_set_ratios(df)
     # df['RATCLIFF_OBERSHELP'] = get_ratcliff_obershelp(df)
     # df['JACCARD_SIMILARITY'] = get_jaccard_similarity(df)
+    df['SHARED_POS'] = get_shared_pos(df)
     return df
+
+# Returns the number of shared pos tags between 'SENTENCE_1' and 'SENTENCE_2'
+def get_shared_pos(df):
+    shared = []
+    for s1, s2 in zip(df['SENTENCE_1'], df['SENTENCE_2']):
+        l1 = [s[1] for s in pos_tag(word_tokenize(s1))]
+        l2 = [s[1] for s in pos_tag(word_tokenize(s2))]
+
+        d1 = {}
+        for pos in l1:
+            d1[pos] = 1 if pos not in d1 else d1[pos] + 1
+
+        d2 = {}
+        for pos in l2:
+            d2[pos] = 1 if pos not in d2 else d2[pos] + 1
+
+        s = []
+        common_keys = set(d1.keys()).intersection(d2.keys())
+        for key in common_keys:
+            s.append(min(d1[key], d2[key]))
+        shared.append(sum(s))
+        
+    return shared            
 
 # Calculates the jaccard similarities of columns 'SENTENCE_1' and 'SENTENCE_2'
 def get_jaccard_similarity(df):
@@ -195,6 +219,9 @@ if __name__ == '__main__':
 
     # Downlad stop words
     download('stopwords')
+
+    # Download the tagger
+    download('averaged_perceptron_tagger')
 
     # Run main
     main()
